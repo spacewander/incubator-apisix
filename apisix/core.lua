@@ -31,6 +31,7 @@ return {
     log      = log,
     config   = config,
     json     = require("apisix.core.json"),
+    set      = require("apisix.core.set"),
     table    = require("apisix.core.table"),
     request  = require("apisix.core.request"),
     response = require("apisix.core.response"),
