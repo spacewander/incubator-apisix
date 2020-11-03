@@ -412,6 +412,16 @@ end
 
 
 function _M.init_worker()
+    local plugin_metadatas, err = core.config.new("/plugin_metadata",
+        {automatic = true}
+    )
+    if not plugin_metadatas then
+        error("failed to create etcd instance for fetching /plugin_metadatas : "
+              .. err)
+    end
+
+    _M.plugin_metadatas = plugin_metadatas
+
     _M.load()
 
     -- some plugins need to be initialized in init* phases
@@ -422,16 +432,6 @@ function _M.init_worker()
     if local_conf and not local_conf.apisix.enable_admin then
         init_plugins_syncer()
     end
-
-    local plugin_metadatas, err = core.config.new("/plugin_metadata",
-        {automatic = true}
-    )
-    if not plugin_metadatas then
-        error("failed to create etcd instance for fetching /plugin_metadatas : "
-              .. err)
-    end
-
-    _M.plugin_metadatas = plugin_metadatas
 end
 
 

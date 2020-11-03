@@ -16,6 +16,7 @@
 --
 local sw_tracer = require("skywalking.tracer")
 local core = require("apisix.core")
+local plugin = require("apisix.plugin")
 local process = require("ngx.process")
 local ngx = ngx
 local math = math
@@ -106,20 +107,22 @@ function _M.init()
         return
     end
 
-    local local_conf = core.config.local_conf()
-    local local_plugin_info = core.table.try_read_attr(local_conf,
-                                                       "plugin_attr",
-                                                       plugin_name) or {}
-    local_plugin_info = core.table.clone(local_plugin_info)
+    local metadata = plugin.plugin_metadata(plugin_name)
+    core.log.info("metadata: ", core.json.delay_encode(metadata))
+
+    local local_plugin_info
+    if metadata then
+        local_plugin_info = core.table.clone(metadata)
+    else
+        local_plugin_info = {}
+    end
+
     local ok, err = core.schema.check(metadata_schema, local_plugin_info)
     if not ok then
-        core.log.error("failed to check the plugin_attr[", plugin_name, "]",
+        core.log.error("failed to check the plugin_metadata[", plugin_name, "]",
                        ": ", err)
         return
     end
-
-    core.log.info("plugin attribute: ",
-                  core.json.delay_encode(local_plugin_info))
 
     -- TODO: maybe need to fetch them from plugin-metadata
     local metadata_shdict = ngx.shared.tracing_buffer
