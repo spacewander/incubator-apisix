@@ -455,7 +455,9 @@ Please modify "admin_key" in conf/config.yaml .
     for k,v in pairs(yaml_conf.apisix) do
         sys_conf[k] = v
     end
+    print("A")
     for k,v in pairs(yaml_conf.nginx_config) do
+        print(k, v)
         sys_conf[k] = v
     end
 
