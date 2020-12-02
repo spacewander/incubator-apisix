@@ -483,6 +483,39 @@ function _M.getkey(self, key)
 end
 
 
+local get_etcd
+do
+    local etcd_cli
+
+    function get_etcd()
+        if etcd_cli == nil then
+            local local_conf, err = config_local.local_conf()
+            if not local_conf then
+                return nil, err
+            end
+
+            local etcd_conf = clone_tab(local_conf.etcd)
+            etcd_conf.http_host = etcd_conf.host
+            etcd_conf.host = nil
+            etcd_conf.prefix = nil
+            etcd_conf.protocol = "v3"
+            etcd_conf.api_prefix = "/v3"
+
+            -- default to verify etcd cluster certificate
+            etcd_conf.ssl_verify = true
+            if etcd_conf.tls and etcd_conf.tls.verify == false then
+                etcd_conf.ssl_verify = false
+            end
+
+            etcd_cli, err = etcd.new(etcd_conf)
+            return etcd_cli, err
+        end
+
+        return etcd_cli
+    end
+end
+
+
 local function _automatic_fetch(premature, self)
     if premature then
         return
@@ -494,7 +527,7 @@ local function _automatic_fetch(premature, self)
 
         local ok, err = xpcall(function()
             if not self.etcd_cli then
-                local etcd_cli, err = etcd.new(self.etcd_conf)
+                local etcd_cli, err = get_etcd()
                 if not etcd_cli then
                     error("failed to create etcd instance for key ["
                           .. self.key .. "]: " .. (err or "unknown"))
@@ -545,19 +578,7 @@ function _M.new(key, opts)
         return nil, err
     end
 
-    local etcd_conf = clone_tab(local_conf.etcd)
-    local prefix = etcd_conf.prefix
-    etcd_conf.http_host = etcd_conf.host
-    etcd_conf.host = nil
-    etcd_conf.prefix = nil
-    etcd_conf.protocol = "v3"
-    etcd_conf.api_prefix = "/v3"
-    etcd_conf.ssl_verify = true
-
-    -- default to verify etcd cluster certificate
-    if etcd_conf.tls and etcd_conf.tls.verify == false then
-        etcd_conf.ssl_verify = false
-    end
+    local prefix = local_conf.etcd.prefix
 
     local automatic = opts and opts.automatic
     local item_schema = opts and opts.item_schema
@@ -568,7 +589,6 @@ function _M.new(key, opts)
 
     local obj = setmetatable({
         etcd_cli = nil,
-        etcd_conf = etcd_conf,
         key = key and prefix .. key,
         automatic = automatic,
         item_schema = item_schema,
@@ -595,7 +615,7 @@ function _M.new(key, opts)
         ngx_timer_at(0, _automatic_fetch, obj)
 
     else
-        local etcd_cli, err = etcd.new(etcd_conf)
+        local etcd_cli, err = get_etcd()
         if not etcd_cli then
             return nil, "failed to start a etcd instance: " .. err
         end
