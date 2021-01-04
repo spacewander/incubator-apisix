@@ -24,6 +24,7 @@ local admin_init    = require("apisix.admin.init")
 local get_var       = require("resty.ngxvar").fetch
 local router        = require("apisix.router")
 local set_upstream  = require("apisix.upstream").set_by_route
+local ctxdump       = require("resty.ctxdump")
 local ipmatcher     = require("resty.ipmatcher")
 local ngx           = ngx
 local get_method    = ngx.req.get_method
@@ -34,6 +35,7 @@ local ipairs        = ipairs
 local tostring      = tostring
 local type          = type
 local ngx_now       = ngx.now
+local ngx_var       = ngx.var
 local str_byte      = string.byte
 local str_sub       = string.sub
 local tonumber      = tonumber
@@ -544,6 +546,16 @@ function _M.http_access_phase()
     end
 
     set_upstream_host(api_ctx)
+
+    if api_ctx.dubbo_proxy_enabled then
+        ngx_var.ctx_ref = ctxdump.stash_ngx_ctx()
+        return ngx.exec("@dubbo_pass")
+    end
+end
+
+
+function _M.dubbo_access_phase()
+    ngx.ctx = ctxdump.apply_ngx_ctx(ngx_var.ctx_ref)
 end
 
 

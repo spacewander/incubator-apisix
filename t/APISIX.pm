@@ -269,6 +269,16 @@ _EOC_
         keepalive 32;
     }
 
+    upstream apisix_dubbo_backend {
+        server 0.0.0.1;
+        balancer_by_lua_block {
+            apisix.http_balancer_phase()
+        }
+
+        multi 1;
+        keepalive 320;
+    }
+
     init_by_lua_block {
         $init_by_lua_block
     }
@@ -362,6 +372,10 @@ _EOC_
         set \$upstream_scheme             'http';
         set \$upstream_host               \$host;
         set \$upstream_uri                '';
+        set \$ctx_ref                     '';
+        set \$dubbo_service_name          '';
+        set \$dubbo_service_version       '';
+        set \$dubbo_method                '';
 
         location = /apisix/nginx_status {
             allow 127.0.0.0/24;
@@ -445,6 +459,28 @@ _EOC_
             grpc_set_header   Content-Type application/grpc;
             grpc_socket_keepalive on;
             grpc_pass         grpc://apisix_backend;
+
+            header_filter_by_lua_block {
+                apisix.http_header_filter_phase()
+            }
+
+            body_filter_by_lua_block {
+                apisix.http_body_filter_phase()
+            }
+
+            log_by_lua_block {
+                apisix.http_log_phase()
+            }
+        }
+
+        location \@dubbo_pass {
+            access_by_lua_block {
+                apisix.dubbo_access_phase()
+            }
+
+            dubbo_pass_all_headers on;
+            dubbo_pass_body on;
+            dubbo_pass \$dubbo_service_name \$dubbo_service_version \$dubbo_method apisix_dubbo_backend;
 
             header_filter_by_lua_block {
                 apisix.http_header_filter_phase()

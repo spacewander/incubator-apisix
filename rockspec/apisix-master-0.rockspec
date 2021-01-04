@@ -58,6 +58,7 @@ dependencies = {
     "resty-redis-cluster = 1.02-4",
     "lua-resty-expr = 1.0.0",
     "graphql = 0.0.2",
+    "lua-resty-ctxdump = 0.1-0",
 }
 
 build = {
