@@ -25,7 +25,7 @@ install_dependencies() {
 
     # install development tools
     yum install -y wget tar gcc automake autoconf libtool make \
-        curl git which
+        curl git which sudo
 
     # install epel and luarocks
     wget http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
@@ -70,6 +70,7 @@ run_case() {
     export PATH=/usr/local/openresty-debug/nginx/sbin:/usr/local/openresty-debug/bin:$PATH
     cd apisix
 
+    ./utils/set-dns.sh
     # run test cases
     prove -Itest-nginx/lib -I./ -r t/
 }

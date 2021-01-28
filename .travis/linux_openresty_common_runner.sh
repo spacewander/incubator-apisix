@@ -98,6 +98,8 @@ script() {
     export_or_prefix
     openresty -V
 
+    ./utils/set-dns.sh
+
     ./build-cache/grpc_server_example \
         -grpc-address :50051 -grpcs-address :50052 \
         -crt ./t/certs/apisix.crt -key ./t/certs/apisix.key \
@@ -128,7 +130,7 @@ script() {
     sleep 1
     cat logs/error.log
 
-    sudo sh ./t/grpc-proxy-test.sh
+    sh ./t/grpc-proxy-test.sh
     sleep 1
 
     ./bin/apisix stop
