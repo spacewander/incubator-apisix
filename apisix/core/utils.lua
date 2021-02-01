@@ -115,7 +115,7 @@ local function dns_parse(domain)
     local answer = answers[idx]
     local dns_type = answer.type
     -- TODO: support AAAA & SRV
-    if dns_type == dns_client.TYPE_A then
+    if dns_type == dns_client.TYPE_A or dns_type == dns_client.TYPE_AAAA then
         return table.deepcopy(answer)
     end
 
