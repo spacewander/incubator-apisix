@@ -1,0 +1,14 @@
+{
+  "data_dir": "/tmp/consul",
+  "log_level": "INFO",
+  "node_name": "test",
+  "server": true,
+  "ui": true,
+  "bootstrap_expect": 1,
+  "client_addr": "0.0.0.0",
+  "advertise_addr": "127.0.0.1",
+  "ports": {
+    "dns": 2053
+  },  
+  "advertise_addr_wan": "127.0.0.1"
+}
