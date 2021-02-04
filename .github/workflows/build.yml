@@ -26,6 +26,7 @@ jobs:
     env:
       SERVER_NAME: ${{ matrix.os_name }}
       OPENRESTY_VERSION: default
+      IN_CI: true
 
 
     services:
